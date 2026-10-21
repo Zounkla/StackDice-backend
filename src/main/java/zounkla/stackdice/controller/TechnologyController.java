@@ -8,6 +8,7 @@ import zounkla.stackdice.exception.CategoryNotFoundException;
 import zounkla.stackdice.exception.CompatibilityNotFoundException;
 import zounkla.stackdice.exception.TechnologyNotFoundException;
 import zounkla.stackdice.mapper.TechnologyMapper;
+import zounkla.stackdice.model.dto.Stack;
 import zounkla.stackdice.model.dto.TechnologyOut;
 import zounkla.stackdice.model.entity.Technology;
 import zounkla.stackdice.service.TechnologyService;
@@ -50,5 +51,11 @@ public class TechnologyController {
 
     // TODO delete
 
-    // TODO drawStack
+    @GetMapping("/draw")
+    public ResponseEntity<Stack> drawTechnology() {
+        Stack stack = technologyService.drawTechnology();
+        return ResponseEntity.ok(
+                stack
+        );
+    }
 }

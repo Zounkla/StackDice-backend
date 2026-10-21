@@ -11,6 +11,7 @@ import zounkla.stackdice.exception.CompatibilityNotFoundException;
 import zounkla.stackdice.exception.TechnologyNotFoundException;
 import zounkla.stackdice.model.Category;
 import zounkla.stackdice.model.Compatibility;
+import zounkla.stackdice.model.dto.Stack;
 import zounkla.stackdice.model.entity.Technology;
 import zounkla.stackdice.repository.TechnologyRepository;
 
@@ -49,6 +50,39 @@ public class TechnologyService {
                 () -> new TechnologyNotFoundException("Technology with id: " + uuid + " not found")
         );
     }
+
+    public Stack drawTechnology()  {
+        String[] projectTypes = {"WEB", "MOBILE", "DESKTOP"};
+        String chosenType = projectTypes[(int) (Math.random() * projectTypes.length)];
+
+        Stack stack = new Stack();
+        stack.setProjectType(chosenType);
+
+        switch (chosenType) {
+            case "WEB":
+                stack.setFrontend(technologyRepository.findRandomByCategoryAndCompatibility(Category.FRONT.name(), Compatibility.WEB.name()).orElse(null));
+                stack.setBackend(technologyRepository.findRandomByCategoryAndCompatibility(Category.BACK.name(), Compatibility.WEB.name()).orElse(null));
+                stack.setDatabase(technologyRepository.findRandomByCategoryAndCompatibility(Category.DATABASE.name(), Compatibility.LOCAL.name()).orElse(null));
+                break;
+
+            case "MOBILE":
+                stack.setFrontend(technologyRepository.findRandomByCategoryAndCompatibility(Category.MOBILE.name(), Compatibility.MOBILE.name()).orElse(null));
+                stack.setBackend(technologyRepository.findRandomByCategoryAndCompatibility(Category.BACK.name(), Compatibility.WEB.name()).orElse(null));
+                stack.setDatabase(technologyRepository.findRandomByCategoryAndCompatibility(Category.DATABASE.name(), Compatibility.LOCAL.name()).orElse(null));
+                break;
+
+            case "DESKTOP":
+                stack.setFrontend(technologyRepository.findRandomByCategoryAndCompatibility(Category.DESKTOP.name(), Compatibility.DESKTOP.name()).orElse(null));
+                stack.setBackend(null);
+                stack.setDatabase(technologyRepository.findRandomByCategoryAndCompatibility(Category.DATABASE.name(), Compatibility.LOCAL.name()).orElse(null));
+                break;
+        }
+        stack.setChallenge(technologyRepository.findRandomByCategoryAndCompatibility(Category.CHALLENGE.name(), Compatibility.ANY.name()).orElse(null));
+
+        return stack;
+    }
+
+
 
     private void checkCategory(String category) throws CategoryNotFoundException {
         try {

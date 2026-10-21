@@ -13,6 +13,7 @@ import zounkla.stackdice.exception.CompatibilityNotFoundException;
 import zounkla.stackdice.exception.TechnologyNotFoundException;
 import zounkla.stackdice.model.Category;
 import zounkla.stackdice.model.Compatibility;
+import zounkla.stackdice.model.dto.Stack;
 import zounkla.stackdice.model.entity.Technology;
 import zounkla.stackdice.repository.TechnologyRepository;
 
@@ -177,5 +178,63 @@ public class TechnologyServiceTests {
                 technologyService.getTechnologies(category, null, pageable)
         );
     }
+
+    @Test
+    public void drawTechnologyShouldReturnCompleteAndValidStackWhenProjectIsWeb() {
+        // GIVE
+        TechnologyService serviceSpy = org.mockito.Mockito.spy(technologyService);
+
+        Technology mockFront = new Technology("Vue.js 3", Category.FRONT, Compatibility.WEB, "Desc");
+        Technology mockBack = new Technology("Spring Boot", Category.BACK, Compatibility.WEB, "Desc");
+        Technology mockDb = new Technology("PostgreSQL", Category.DATABASE, Compatibility.LOCAL, "Desc");
+        Technology mockChallenge = new Technology("Le Vampire", Category.CHALLENGE, Compatibility.ANY, "Desc");
+
+        when(this.technologyRepository.findRandomByCategoryAndCompatibility("FRONT", "WEB")).thenReturn(Optional.of(mockFront));
+        when(this.technologyRepository.findRandomByCategoryAndCompatibility("BACK", "WEB")).thenReturn(Optional.of(mockBack));
+        when(this.technologyRepository.findRandomByCategoryAndCompatibility("DATABASE", "LOCAL")).thenReturn(Optional.of(mockDb));
+        when(this.technologyRepository.findRandomByCategoryAndCompatibility("CHALLENGE", "ANY")).thenReturn(Optional.of(mockChallenge));
+
+        // WHEN
+        Stack result = serviceSpy.drawTechnology();
+
+        // THEN
+        assertNotNull(result);
+        if ("WEB".equals(result.getProjectType()) || "MOBILE".equals(result.getProjectType())) {
+            assertEquals("WEB", result.getProjectType());
+            assertNotNull(result.getBackend());
+            assertEquals("Spring Boot", result.getBackend().getName());
+        } else {
+            assertNull(result.getBackend(), "Le backend doit etre null pour du Desktop");
+        }
+        assertNotNull(result.getFrontend());
+        assertNotNull(result.getDatabase());
+        assertNotNull(result.getChallenge());
+    }
+
+    @Test
+    public void drawTechnologyShouldReturnNullBackendWhenProjectTypeIsDesktop() {
+        // GIVEN
+        Technology mockFrontDesktop = new Technology("JavaFX", Category.DESKTOP, Compatibility.DESKTOP, "Desc");
+        Technology mockDbLocal = new Technology("SQLite", Category.DATABASE, Compatibility.LOCAL, "Desc");
+        Technology mockChallenge = new Technology("Le Minimaliste", Category.CHALLENGE, Compatibility.ANY, "Desc");
+
+        when(this.technologyRepository.findRandomByCategoryAndCompatibility(ArgumentMatchers.anyString(), ArgumentMatchers.anyString()))
+                .thenReturn(Optional.of(mockFrontDesktop))
+                .thenReturn(Optional.of(mockDbLocal))
+                .thenReturn(Optional.of(mockChallenge));
+
+        // WHEN
+        Stack result = technologyService.drawTechnology();
+
+        // THEN
+        if ("DESKTOP".equals(result.getProjectType())) {
+            assertNull(result.getBackend(), "Un projet DESKTOP ne doit pas posseder de backend");
+            assertNotNull(result.getFrontend());
+            assertNotNull(result.getDatabase());
+        } else {
+            assertNotNull(result.getBackend(), "Un projet WEB/MOBILE doit posseder un backend");
+        }
+    }
+
 
 }
