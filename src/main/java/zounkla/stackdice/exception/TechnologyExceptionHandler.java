@@ -12,7 +12,9 @@ public class TechnologyExceptionHandler {
 
 
     @ExceptionHandler({
-            TechnologyNotFoundException.class
+            TechnologyNotFoundException.class,
+            CategoryNotFoundException.class,
+            CompatibilityNotFoundException.class
     })
     public ResponseEntity<ErrorResponse> handleNotFoundExceptions(Exception ex) {
         return createErrorResponse(ex, HttpStatus.NOT_FOUND);

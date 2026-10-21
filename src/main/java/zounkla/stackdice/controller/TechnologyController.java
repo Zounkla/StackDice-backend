@@ -1,11 +1,11 @@
 package zounkla.stackdice.controller;
 
-import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import zounkla.stackdice.exception.CategoryNotFoundException;
+import zounkla.stackdice.exception.CompatibilityNotFoundException;
 import zounkla.stackdice.exception.TechnologyNotFoundException;
 import zounkla.stackdice.mapper.TechnologyMapper;
 import zounkla.stackdice.model.dto.TechnologyOut;
@@ -26,14 +26,22 @@ public class TechnologyController {
         this.technologyService = technologyService;
     }
 
-    // TODO getAll
+    @GetMapping
+    public ResponseEntity<Page<TechnologyOut>> getAllTechnologies(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String compatibility,
+            Pageable pageable
+    ) throws CategoryNotFoundException, CompatibilityNotFoundException {
+        Page<Technology> technologies = technologyService.getTechnologies(category, compatibility, pageable);
+        return ResponseEntity.ok(technologies.map(technologyMapper::technologyToTechnologyOut));
+    }
 
     @GetMapping("/{uuid}")
     public ResponseEntity<TechnologyOut> getTechnology(@PathVariable UUID uuid) throws TechnologyNotFoundException {
         Technology technology = technologyService.getTechnology(uuid);
-        return new ResponseEntity<>(
-                technologyMapper.technologyToTechnologyOut(technology),
-                HttpStatus.OK);
+        return ResponseEntity.ok(
+                technologyMapper.technologyToTechnologyOut(technology)
+        );
     }
 
     // TODO create
