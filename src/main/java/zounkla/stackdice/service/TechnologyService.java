@@ -51,6 +51,14 @@ public class TechnologyService {
         );
     }
 
+    public void deleteTechnology(UUID uuid) throws TechnologyNotFoundException {
+        long deletedCount = technologyRepository.deleteTechnologyByIdReturningCount(uuid);
+
+        if (deletedCount == 0) {
+            throw new TechnologyNotFoundException("Technology with id: " + uuid + " not found");
+        }
+    }
+
     public Stack drawTechnology()  {
         String[] projectTypes = {"WEB", "MOBILE", "DESKTOP"};
         String chosenType = projectTypes[(int) (Math.random() * projectTypes.length)];

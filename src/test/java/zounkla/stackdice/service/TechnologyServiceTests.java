@@ -24,7 +24,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class TechnologyServiceTests {
@@ -234,6 +234,32 @@ public class TechnologyServiceTests {
         } else {
             assertNotNull(result.getBackend(), "Un projet WEB/MOBILE doit posseder un backend");
         }
+    }
+
+    @Test
+    public void deleteTechnologyShouldDeleteSuccessfullyWhenIdExists() throws TechnologyNotFoundException {
+        // GIVEN
+        UUID id = UUID.randomUUID();
+        when(technologyRepository.deleteTechnologyByIdReturningCount(id)).thenReturn(1L);
+
+        // WHEN & THEN
+        assertDoesNotThrow(() -> technologyService.deleteTechnology(id));
+        verify(technologyRepository, times(1)).deleteTechnologyByIdReturningCount(id);
+    }
+
+    @Test
+    public void deleteTechnologyShouldThrowExceptionWhenIdDoesNotExist() {
+        // GIVEN
+        UUID id = UUID.randomUUID();
+        when(technologyRepository.deleteTechnologyByIdReturningCount(id)).thenReturn(0L);
+
+        // WHEN & THEN
+        TechnologyNotFoundException exception = assertThrows(
+                TechnologyNotFoundException.class,
+                () -> technologyService.deleteTechnology(id)
+        );
+        assertEquals("Technology with id: " + id + " not found", exception.getMessage());
+        verify(technologyRepository, times(1)).deleteTechnologyByIdReturningCount(id);
     }
 
 

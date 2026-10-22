@@ -1,6 +1,7 @@
 package zounkla.stackdice.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -20,4 +21,8 @@ public interface TechnologyRepository extends JpaRepository<Technology, UUID> {
             @Param("category") String category,
             @Param("compatibility") String compatibility
     );
+
+    @Modifying
+    @Query("DELETE FROM Technology t WHERE t.id = :uuid")
+    long deleteTechnologyByIdReturningCount(UUID uuid);
 }
