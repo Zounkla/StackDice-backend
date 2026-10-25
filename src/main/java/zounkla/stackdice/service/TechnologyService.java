@@ -51,6 +51,10 @@ public class TechnologyService {
         );
     }
 
+    public void createTechnology(Technology technology) {
+        technologyRepository.save(technology);
+    }
+
     public void deleteTechnology(UUID uuid) throws TechnologyNotFoundException {
         long deletedCount = technologyRepository.deleteTechnologyByIdReturningCount(uuid);
 

@@ -1,4 +1,6 @@
 package zounkla.stackdice.model.dto;
 
-public record TechnologyOut(String name, String description, String category, String compatibility) {
+import java.util.UUID;
+
+public record TechnologyOut(UUID id, String name, String description, String category, String compatibility) {
 }

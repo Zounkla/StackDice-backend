@@ -6,8 +6,10 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zounkla.stackdice.exception.CategoryNotFoundException;
@@ -15,6 +17,7 @@ import zounkla.stackdice.exception.CompatibilityNotFoundException;
 import zounkla.stackdice.exception.TechnologyNotFoundException;
 import zounkla.stackdice.mapper.TechnologyMapper;
 import zounkla.stackdice.model.dto.Stack;
+import zounkla.stackdice.model.dto.TechnologyIn;
 import zounkla.stackdice.model.dto.TechnologyOut;
 import zounkla.stackdice.model.entity.Technology;
 import zounkla.stackdice.service.TechnologyService;
@@ -66,7 +69,19 @@ public class TechnologyController {
         return ResponseEntity.ok(technologyMapper.technologyToTechnologyOut(technology));
     }
 
-    // TODO Create
+    @PostMapping
+    @Operation(summary = "Créer une technologie", description = "Crée la technologie spécifiée et la retourne.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Technologie créée"),
+            @ApiResponse(responseCode = "400", description = "Paramètres obligatoires non renseignés", content = @Content)
+    })
+    public ResponseEntity<TechnologyOut> createTechnology(
+            @RequestBody @Valid TechnologyIn technologyIn
+    ) {
+        Technology technology = technologyMapper.technologyInToTechnology(technologyIn);
+        technologyService.createTechnology(technology);
+        return new ResponseEntity<>(technologyMapper.technologyToTechnologyOut(technology), HttpStatus.CREATED);
+    }
 
     // TOdo Update
 
