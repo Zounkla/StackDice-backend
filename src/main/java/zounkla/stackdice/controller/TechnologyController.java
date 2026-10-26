@@ -83,7 +83,21 @@ public class TechnologyController {
         return new ResponseEntity<>(technologyMapper.technologyToTechnologyOut(technology), HttpStatus.CREATED);
     }
 
-    // TOdo Update
+    @PutMapping("/{uuid}")
+    @Operation(summary = "Modifier une technologie", description = "Modifie la technologie spécifiée et la retourne.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Technologie mise à jour"),
+            @ApiResponse(responseCode = "400", description = "Paramètres obligatoires non renseignés", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Technologie introuvable", content = @Content)
+    })
+    public ResponseEntity<TechnologyOut> updateTechnology(
+            @PathVariable UUID uuid,
+            @RequestBody @Valid TechnologyIn technologyIn
+    ) throws TechnologyNotFoundException {
+        Technology technology = technologyMapper.technologyInToTechnology(technologyIn);
+        technology = technologyService.updateTechnology(uuid, technology);
+        return ResponseEntity.ok(technologyMapper.technologyToTechnologyOut(technology));
+    }
 
     @DeleteMapping
     @Operation(summary = "Supprimer une technologie", description = "Supprime définitivement une technologie du catalogue via son UUID.")

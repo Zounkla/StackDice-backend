@@ -180,38 +180,6 @@ public class TechnologyServiceTests {
     }
 
     @Test
-    public void drawTechnologyShouldReturnCompleteAndValidStackWhenProjectIsWeb() {
-        // GIVE
-        TechnologyService serviceSpy = org.mockito.Mockito.spy(technologyService);
-
-        Technology mockFront = new Technology("Vue.js 3", Category.FRONT, Compatibility.WEB, "Desc");
-        Technology mockBack = new Technology("Spring Boot", Category.BACK, Compatibility.WEB, "Desc");
-        Technology mockDb = new Technology("PostgreSQL", Category.DATABASE, Compatibility.LOCAL, "Desc");
-        Technology mockChallenge = new Technology("Le Vampire", Category.CHALLENGE, Compatibility.ANY, "Desc");
-
-        when(this.technologyRepository.findRandomByCategoryAndCompatibility("FRONT", "WEB")).thenReturn(Optional.of(mockFront));
-        when(this.technologyRepository.findRandomByCategoryAndCompatibility("BACK", "WEB")).thenReturn(Optional.of(mockBack));
-        when(this.technologyRepository.findRandomByCategoryAndCompatibility("DATABASE", "LOCAL")).thenReturn(Optional.of(mockDb));
-        when(this.technologyRepository.findRandomByCategoryAndCompatibility("CHALLENGE", "ANY")).thenReturn(Optional.of(mockChallenge));
-
-        // WHEN
-        Stack result = serviceSpy.drawTechnology();
-
-        // THEN
-        assertNotNull(result);
-        if ("WEB".equals(result.getProjectType()) || "MOBILE".equals(result.getProjectType())) {
-            assertEquals("WEB", result.getProjectType());
-            assertNotNull(result.getBackend());
-            assertEquals("Spring Boot", result.getBackend().getName());
-        } else {
-            assertNull(result.getBackend(), "Le backend doit etre null pour du Desktop");
-        }
-        assertNotNull(result.getFrontend());
-        assertNotNull(result.getDatabase());
-        assertNotNull(result.getChallenge());
-    }
-
-    @Test
     public void drawTechnologyShouldReturnNullBackendWhenProjectTypeIsDesktop() {
         // GIVEN
         Technology mockFrontDesktop = new Technology("JavaFX", Category.DESKTOP, Compatibility.DESKTOP, "Desc");
@@ -237,7 +205,7 @@ public class TechnologyServiceTests {
     }
 
     @Test
-    public void deleteTechnologyShouldDeleteSuccessfullyWhenIdExists() throws TechnologyNotFoundException {
+    public void deleteTechnologyShouldDeleteSuccessfullyWhenIdExists() {
         // GIVEN
         UUID id = UUID.randomUUID();
         when(technologyRepository.deleteTechnologyByIdReturningCount(id)).thenReturn(1L);
@@ -261,6 +229,141 @@ public class TechnologyServiceTests {
         assertEquals("Technology with id: " + id + " not found", exception.getMessage());
         verify(technologyRepository, times(1)).deleteTechnologyByIdReturningCount(id);
     }
+
+    @Test
+    public void createTechnologyShouldSaveSuccessfully() {
+        // GIVEN
+        Technology newTech = new Technology();
+        newTech.setName("Spring Boot");
+        newTech.setCategory(Category.BACK);
+
+        // WHEN
+        technologyService.createTechnology(newTech);
+
+        // THEN
+        verify(technologyRepository, times(1)).save(newTech);
+    }
+
+    @Test
+    public void updateTechnologyShouldUpdateAndReturnSuccessfullyWhenIdExists() throws TechnologyNotFoundException {
+        // GIVEN
+        UUID uuid = UUID.randomUUID();
+
+        Technology existingTech = new Technology();
+        existingTech.setId(uuid);
+        existingTech.setName("Old Name");
+        existingTech.setDescription("Old Desc");
+        existingTech.setCategory(Category.FRONT);
+        existingTech.setCompatibility(Compatibility.WEB);
+
+        Technology updateData = new Technology();
+        updateData.setName("New Name");
+        updateData.setDescription("New Desc");
+        updateData.setCategory(Category.BACK);
+        updateData.setCompatibility(Compatibility.ANY);
+
+        when(technologyRepository.findById(uuid)).thenReturn(Optional.of(existingTech));
+        when(technologyRepository.save(any(Technology.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // WHEN
+        Technology result = technologyService.updateTechnology(uuid, updateData);
+
+        // THEN
+        assertNotNull(result);
+        assertEquals(uuid, result.getId());
+        assertEquals("New Name", result.getName());
+        assertEquals("New Desc", result.getDescription());
+        assertEquals(Category.BACK, result.getCategory());
+        assertEquals(Compatibility.ANY, result.getCompatibility());
+
+        verify(technologyRepository, times(1)).findById(uuid);
+        verify(technologyRepository, times(1)).save(existingTech);
+    }
+
+    @Test
+    public void updateTechnologyShouldThrowExceptionWhenIdDoesNotExist() {
+        // GIVEN
+        UUID uuid = UUID.randomUUID();
+        Technology updateData = new Technology();
+
+        when(technologyRepository.findById(uuid)).thenReturn(Optional.empty());
+
+        // WHEN & THEN
+        TechnologyNotFoundException exception = assertThrows(
+                TechnologyNotFoundException.class,
+                () -> technologyService.updateTechnology(uuid, updateData)
+        );
+        assertEquals("Technology with id: " + uuid + " not found", exception.getMessage());
+
+        verify(technologyRepository, never()).save(any(Technology.class));
+    }
+
+    @Test
+    public void drawTechnologyShouldReturnDeterministicStackLoopingUntilAllBranchesCovered() {
+        // GIVEN
+        Technology frontWeb = new Technology("React", Category.FRONT, Compatibility.WEB, "Desc");
+        Technology backWeb = new Technology("Node", Category.BACK, Compatibility.WEB, "Desc");
+        Technology dbLocal = new Technology("Postgres", Category.DATABASE, Compatibility.LOCAL, "Desc");
+        Technology frontMobile = new Technology("Flutter", Category.MOBILE, Compatibility.MOBILE, "Desc");
+        Technology frontDesktop = new Technology("Electron", Category.DESKTOP, Compatibility.DESKTOP, "Desc");
+        Technology challenge = new Technology("No Libraries", Category.CHALLENGE, Compatibility.ANY, "Desc");
+
+        when(technologyRepository.findRandomByCategoryAndCompatibility(Category.FRONT.name(), Compatibility.WEB.name()))
+                .thenReturn(Optional.of(frontWeb));
+        when(technologyRepository.findRandomByCategoryAndCompatibility(Category.BACK.name(), Compatibility.WEB.name()))
+                .thenReturn(Optional.of(backWeb));
+        when(technologyRepository.findRandomByCategoryAndCompatibility(Category.DATABASE.name(), Compatibility.LOCAL.name()))
+                .thenReturn(Optional.of(dbLocal));
+        when(technologyRepository.findRandomByCategoryAndCompatibility(Category.MOBILE.name(), Compatibility.MOBILE.name()))
+                .thenReturn(Optional.of(frontMobile));
+        when(technologyRepository.findRandomByCategoryAndCompatibility(Category.DESKTOP.name(), Compatibility.DESKTOP.name()))
+                .thenReturn(Optional.of(frontDesktop));
+        when(technologyRepository.findRandomByCategoryAndCompatibility(Category.CHALLENGE.name(), Compatibility.ANY.name()))
+                .thenReturn(Optional.of(challenge));
+
+        boolean webCovered = false;
+        boolean mobileCovered = false;
+        boolean desktopCovered = false;
+
+        // WHEN & THEN
+        for (int i = 0; i < 100; i++) {
+            Stack result = technologyService.drawTechnology();
+            assertNotNull(result);
+            assertEquals(challenge, result.getChallenge());
+
+            switch (result.getProjectType()) {
+                case "WEB":
+                    assertEquals(frontWeb, result.getFrontend());
+                    assertEquals(backWeb, result.getBackend());
+                    assertEquals(dbLocal, result.getDatabase());
+                    webCovered = true;
+                    break;
+                case "MOBILE":
+                    assertEquals(frontMobile, result.getFrontend());
+                    assertEquals(backWeb, result.getBackend());
+                    assertEquals(dbLocal, result.getDatabase());
+                    mobileCovered = true;
+                    break;
+                case "DESKTOP":
+                    assertEquals(frontDesktop, result.getFrontend());
+                    assertNull(result.getBackend(), "Un projet DESKTOP ne doit pas posséder de backend");
+                    assertEquals(dbLocal, result.getDatabase());
+                    desktopCovered = true;
+                    break;
+                default:
+                    fail("Type de projet inconnu généré : " + result.getProjectType());
+            }
+
+            if (webCovered && mobileCovered && desktopCovered) {
+                break;
+            }
+        }
+
+        assertTrue(webCovered, "La branche WEB n'a pas pu être testée");
+        assertTrue(mobileCovered, "La branche MOBILE n'a pas pu être testée");
+        assertTrue(desktopCovered, "La branche DESKTOP n'a pas pu être testée");
+    }
+
 
 
 }

@@ -55,6 +55,18 @@ public class TechnologyService {
         technologyRepository.save(technology);
     }
 
+    public Technology  updateTechnology(UUID uuid, Technology technology) throws TechnologyNotFoundException {
+        Technology existingTech = technologyRepository.findById(uuid)
+                .orElseThrow(() -> new TechnologyNotFoundException("Technology with id: " + uuid + " not found"));
+
+        existingTech.setName(technology.getName());
+        existingTech.setCategory(technology.getCategory());
+        existingTech.setCompatibility(technology.getCompatibility());
+        existingTech.setDescription(technology.getDescription());
+
+        return technologyRepository.save(existingTech);
+    }
+
     public void deleteTechnology(UUID uuid) throws TechnologyNotFoundException {
         long deletedCount = technologyRepository.deleteTechnologyByIdReturningCount(uuid);
 
