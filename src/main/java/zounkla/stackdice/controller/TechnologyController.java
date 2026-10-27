@@ -86,7 +86,7 @@ public class TechnologyController {
     @PutMapping("/{uuid}")
     @Operation(summary = "Modifier une technologie", description = "Modifie la technologie spécifiée et la retourne.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Technologie mise à jour"),
+            @ApiResponse(responseCode = "200", description = "Technologie mise à jour"),
             @ApiResponse(responseCode = "400", description = "Paramètres obligatoires non renseignés", content = @Content),
             @ApiResponse(responseCode = "404", description = "Technologie introuvable", content = @Content)
     })
@@ -99,7 +99,7 @@ public class TechnologyController {
         return ResponseEntity.ok(technologyMapper.technologyToTechnologyOut(technology));
     }
 
-    @DeleteMapping
+    @DeleteMapping("/{uuid}")
     @Operation(summary = "Supprimer une technologie", description = "Supprime définitivement une technologie du catalogue via son UUID.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Technologie supprimée avec succès (Aucun contenu renvoyé)"),
@@ -107,7 +107,7 @@ public class TechnologyController {
     })
     public ResponseEntity<Void> deleteTechnology(
             @Parameter(description = "UUID de la technologie à supprimer", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
-            @RequestParam UUID uuid
+            @PathVariable UUID uuid
     ) throws TechnologyNotFoundException {
         technologyService.deleteTechnology(uuid);
         return ResponseEntity.noContent().build();
